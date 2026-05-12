@@ -3,6 +3,8 @@ import { Request } from 'express';
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
+  message?: string;
+  meta?: any;
   error?: {
     code: string;
     message: string;

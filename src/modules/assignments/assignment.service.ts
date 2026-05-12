@@ -6,14 +6,22 @@ import { NotFoundError, ForbiddenError, ValidationError } from '../../shared/err
 import { CreateAssignmentDto, UpdateAssignmentDto, AssignmentQuery } from './assignment.types';
 
 async function checkStudyTime(assignmentId: string): Promise<void> {
-  const sessions = await PomodoroSession.find({ assignment_id: assignmentId });
-  const totalStudyHours = sessions.reduce((sum, s) => {
+  const assignment = await Assignment.findById(assignmentId);
+  if (!assignment) throw new NotFoundError('Assignment not found');
+
+  // Kiểm tra thời gian học dựa trên assignment_id HOẶC course_id của bài tập đó
+  const sessions = await PomodoroSession.find({
+    $or: [{ assignment_id: assignmentId }, { course_id: assignment.course_id }],
+    status: 'completed',
+  });
+
+  const totalStudyTime = sessions.reduce((sum, s) => {
     if (!s.end_time || !s.start_time) return sum;
     const duration = s.end_time.getTime() - s.start_time.getTime();
     return sum + (duration > 0 ? duration : 0);
   }, 0);
 
-  if (totalStudyHours <= 0) {
+  if (totalStudyTime <= 0) {
     throw new ValidationError('Bạn chưa học');
   }
 }

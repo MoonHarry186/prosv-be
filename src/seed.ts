@@ -1,69 +1,96 @@
-import mongoose from 'mongoose';
-import { Course } from './models/Course';
-import { User } from './models/User';
-import { Assignment } from './models/Assignment';
-import { StudyStatistic } from './models/StudyStatistic';
-import { PomodoroSession } from './models/PomodoroSession';
-import dotenv from 'dotenv';
-import path from 'path';
+import mongoose from "mongoose";
+import { Course } from "./models/Course";
+import { User } from "./models/User";
+import { Assignment } from "./models/Assignment";
+import { StudyStatistic } from "./models/StudyStatistic";
+import { PomodoroSession } from "./models/PomodoroSession";
+import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/prosv_test';
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/prosv_test";
 
 const seedData = async () => {
   try {
     await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
+    console.log("Connected to MongoDB");
 
     // 1. Clear ALL data except Users
-    console.log('Clearing all existing data (Courses, Assignments, Stats, Sessions)...');
+    console.log(
+      "Clearing all existing data (Courses, Assignments, Stats, Sessions)...",
+    );
     await Course.deleteMany({});
     await Assignment.deleteMany({});
     await StudyStatistic.deleteMany({});
     await PomodoroSession.deleteMany({});
 
-    const users = await User.find();
+    let users = await User.find();
     if (users.length === 0) {
-      console.log('No users found. Please register at least one user first.');
-      process.exit(1);
+      console.log("No users found. Creating superadmin user...");
+      const adminEmail = process.env.ADMIN_EMAIL || "admin@prosv.com";
+      const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+      const superadmin = await User.create({
+        email: adminEmail,
+        password_hash: adminPassword, // Will be hashed by pre-save hook
+        full_name: "Super Admin",
+        role: "superadmin",
+        is_verified: true,
+      });
+      console.log(`Superadmin created: ${superadmin.email}`);
+      users = [superadmin];
     }
 
-    console.log(`Found ${users.length} users. Seeding 10 courses and 120 assignments each.`);
+    console.log(
+      `Found ${users.length} users. Seeding 10 courses and 120 assignments each.`,
+    );
 
     const courseNames = [
-      'Cấu trúc dữ liệu và giải thuật',
-      'Cơ sở dữ liệu',
-      'Mạng máy tính',
-      'Hệ điều hành',
-      'Lập trình Web',
-      'Lập trình di động',
-      'Trí tuệ nhân tạo',
-      'Học máy',
-      'Kỹ thuật phần mềm',
-      'Kiến trúc máy tính',
+      "Cấu trúc dữ liệu và giải thuật",
+      "Cơ sở dữ liệu",
+      "Mạng máy tính",
+      "Hệ điều hành",
+      "Lập trình Web",
+      "Lập trình di động",
+      "Trí tuệ nhân tạo",
+      "Học máy",
+      "Kỹ thuật phần mềm",
+      "Kiến trúc máy tính",
     ];
 
     const assignmentTitles = [
-      'Bài tập về nhà tuần 1',
-      'Báo cáo thực hành 1',
-      'Kiểm tra giữa kỳ',
-      'Dự án nhóm phần 1',
-      'Bài tập lập trình số 1',
-      'Phân tích yêu cầu',
-      'Thiết kế database',
-      'Viết tài liệu hướng dẫn',
-      'Fix bug và tối ưu code',
-      'Triển khai ứng dụng',
-      'Báo cáo cuối kỳ',
-      'Kiểm tra chương 1',
+      "Bài tập về nhà tuần 1",
+      "Báo cáo thực hành 1",
+      "Kiểm tra giữa kỳ",
+      "Dự án nhóm phần 1",
+      "Bài tập lập trình số 1",
+      "Phân tích yêu cầu",
+      "Thiết kế database",
+      "Viết tài liệu hướng dẫn",
+      "Fix bug và tối ưu code",
+      "Triển khai ứng dụng",
+      "Báo cáo cuối kỳ",
+      "Kiểm tra chương 1",
     ];
 
-    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#6366F1', '#64748B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
+    const colors = [
+      "#3B82F6",
+      "#10B981",
+      "#F59E0B",
+      "#F43F5E",
+      "#6366F1",
+      "#64748B",
+      "#8B5CF6",
+      "#EC4899",
+      "#06B6D4",
+      "#F97316",
+    ];
 
     for (const user of users) {
       console.log(`Seeding for user: ${user.email}...`);
-      
+
       // Create 10 Courses
       const courses = [];
       for (let i = 0; i < 10; i++) {
@@ -73,15 +100,15 @@ const seedData = async () => {
           course_code: `CS${200 + i}`,
           instructor_name: `GV. Nguyễn Văn ${String.fromCharCode(65 + i)}`,
           credits: 3,
-          semester: 'Học kỳ 1',
-          academic_year: '2024-2025',
+          semester: "Học kỳ 1",
+          academic_year: "2024-2025",
           color: colors[i],
-          status: 'active',
+          status: "active",
           schedule: [
             {
-              day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i % 5],
-              start_time: '08:00',
-              end_time: '11:00',
+              day: ["Mon", "Tue", "Wed", "Thu", "Fri"][i % 5],
+              start_time: "08:00",
+              end_time: "11:00",
             },
           ],
         });
@@ -101,8 +128,8 @@ const seedData = async () => {
             title: `${assignmentTitles[j]}`,
             description: `Yêu cầu chi tiết cho ${assignmentTitles[j]} của môn ${course.course_name}.`,
             deadline: deadline,
-            status: 'pending',
-            priority: j % 3 === 0 ? 'high' : (j % 3 === 1 ? 'medium' : 'low'),
+            status: "pending",
+            priority: j % 3 === 0 ? "high" : j % 3 === 1 ? "medium" : "low",
           });
         }
       }
@@ -128,14 +155,15 @@ const seedData = async () => {
       await StudyStatistic.insertMany(stats);
     }
 
-    console.log('Successfully cleared and re-seeded all data!');
-    
+    console.log("Successfully cleared and re-seeded all data!");
+
     await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    console.log("Disconnected from MongoDB");
   } catch (error) {
-    console.error('Error seeding data:', error);
+    console.error("Error seeding data:", error);
     process.exit(1);
   }
 };
 
 seedData();
+

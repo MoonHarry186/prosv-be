@@ -30,6 +30,8 @@ export interface AuthUser {
   _id: string;
   email: string;
   full_name: string;
+  student_id?: string;
+  major?: string;
   is_verified: boolean;
   created_at: Date;
 }
@@ -37,4 +39,9 @@ export interface AuthUser {
 export interface AuthResult {
   user: AuthUser;
   tokens: TokenPair;
+}
+
+export interface ChangePasswordDto {
+  old_password: string;
+  new_password: string;
 }

@@ -15,11 +15,12 @@ function dateRange(query: StatisticsQuery) {
 }
 
 export async function getOverview(userId: string, query: StatisticsQuery) {
-  const sessionFilter = { user_id: userId, status: 'completed', ...dateRange(query) };
+  const sessionFilter = { user_id: userId, ...dateRange(query) };
   const assignmentFilter = { status: 'completed' };
 
-  const courses = await Course.find({ user_id: userId }).select('_id');
+  const courses = await Course.find({ user_id: userId }).select('_id credits');
   const courseIds = courses.map((c) => c._id);
+  const totalCredits = courses.reduce((sum, c) => sum + (c.credits || 0), 0);
 
   const [sessions, completedAssignments, totalAssignments] = await Promise.all([
     PomodoroSession.find(sessionFilter),
@@ -37,6 +38,7 @@ export async function getOverview(userId: string, query: StatisticsQuery) {
     total_sessions: sessions.length,
     completed_assignments: completedAssignments,
     total_assignments: totalAssignments,
+    total_credits: totalCredits,
   };
 }
 
@@ -51,7 +53,6 @@ export async function getByCourse(userId: string, query: ByCourseQuery) {
       const sessionFilter = {
         user_id: userId,
         course_id: course._id,
-        status: 'completed',
         ...dateRange(query),
       };
       const sessions = await PomodoroSession.find(sessionFilter);

@@ -22,3 +22,8 @@ export const googleLoginSchema = Joi.object({
 export const facebookLoginSchema = Joi.object({
   access_token: Joi.string().required(),
 });
+
+export const changePasswordSchema = Joi.object({
+  old_password: Joi.string().required(),
+  new_password: Joi.string().min(8).required(),
+});

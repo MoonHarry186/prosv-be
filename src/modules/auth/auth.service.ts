@@ -3,7 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { User } from '../../models/User';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../config/jwt';
 import { AppError, ConflictError, UnauthorizedError } from '../../shared/errors';
-import { RegisterDto, LoginDto, AuthResult, AuthUser, TokenPair, GoogleLoginDto, FacebookLoginDto } from './auth.types';
+import { RegisterDto, LoginDto, AuthResult, AuthUser, TokenPair, GoogleLoginDto, FacebookLoginDto, ChangePasswordDto } from './auth.types';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -12,6 +12,8 @@ function toAuthUser(user: InstanceType<typeof User>): AuthUser {
     _id: String(user._id),
     email: user.email,
     full_name: user.full_name,
+    student_id: user.student_id,
+    major: user.major,
     is_verified: user.is_verified,
     created_at: user.created_at,
   };
@@ -117,4 +119,15 @@ export async function facebookLogin(dto: FacebookLoginDto): Promise<AuthResult> 
   );
 
   return { user: toAuthUser(user), tokens: issueTokens(String(user._id), user.email) };
+}
+
+export async function changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+  const user = await User.findById(userId).select('+password_hash');
+  if (!user) throw new UnauthorizedError('USER_NOT_FOUND', 'User not found');
+
+  const valid = await user.comparePassword(dto.old_password);
+  if (!valid) throw new UnauthorizedError('INVALID_PASSWORD', 'Old password is incorrect');
+
+  user.password_hash = dto.new_password;
+  await user.save();
 }

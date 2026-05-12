@@ -1,5 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose, { Document, Schema } from "mongoose";
+import bcrypt from "bcryptjs";
 
 export interface IUser extends Document {
   email: string;
@@ -12,6 +12,7 @@ export interface IUser extends Document {
   notifications_enabled: boolean;
   google_id?: string;
   facebook_id?: string;
+  role: 'user' | 'admin' | 'superadmin';
   created_at: Date;
   updated_at: Date;
   comparePassword(plain: string): Promise<boolean>;
@@ -19,7 +20,13 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     password_hash: { type: String, select: false },
     full_name: { type: String, required: true, trim: true },
     student_id: { type: String, trim: true },
@@ -29,22 +36,25 @@ const userSchema = new Schema<IUser>(
     notifications_enabled: { type: Boolean, default: true },
     google_id: { type: String, sparse: true },
     facebook_id: { type: String, sparse: true },
+    role: { type: String, enum: ['user', 'admin', 'superadmin'], default: 'user' },
   },
   {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
     versionKey: false,
   },
 );
 
 userSchema.index({ email: 1 });
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password_hash') || !this.password_hash) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password_hash") || !this.password_hash) return next();
   this.password_hash = await bcrypt.hash(this.password_hash, 10);
   next();
 });
 
-userSchema.methods.comparePassword = async function (plain: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (
+  plain: string,
+): Promise<boolean> {
   if (!this.password_hash) return false;
   return bcrypt.compare(plain, this.password_hash);
 };
@@ -55,4 +65,5 @@ userSchema.methods.toJSON = function () {
   return obj;
 };
 
-export const User = mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.model<IUser>("User", userSchema);
+

@@ -5,11 +5,11 @@ export const createSessionSchema = Joi.object({
   assignment_id: Joi.string().hex().length(24),
   work_minutes: Joi.number().integer().min(1).max(120),
   break_minutes: Joi.number().integer().min(1).max(60),
-  status: Joi.string().valid("active", "paused", "cancelled"),
+  status: Joi.string().valid("active", "paused", "completed", "cancelled"),
 });
 
 export const updateSessionSchema = Joi.object({
-  status: Joi.string().valid("active", "paused", "cancelled"),
+  status: Joi.string().valid("active", "paused", "completed", "cancelled"),
   completed_cycles: Joi.number().integer().min(0),
 }).min(1);
 

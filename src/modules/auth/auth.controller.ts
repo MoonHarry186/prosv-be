@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import * as authService from './auth.service';
-import { RegisterDto, LoginDto, RefreshDto, GoogleLoginDto, FacebookLoginDto } from './auth.types';
+import { RegisterDto, LoginDto, RefreshDto, GoogleLoginDto, FacebookLoginDto, ChangePasswordDto } from './auth.types';
 import { AuthRequest, ApiResponse } from '../../shared/types';
 
 export async function register(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
@@ -63,6 +63,15 @@ export async function facebookLogin(req: AuthRequest, res: Response, next: NextF
   try {
     const result = await authService.facebookLogin(req.body as FacebookLoginDto);
     res.status(200).json({ success: true, data: result } satisfies ApiResponse);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function changePassword(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.changePassword(req.user!.userId, req.body as ChangePasswordDto);
+    res.status(200).json({ success: true, data: null, message: 'Password changed successfully' } satisfies ApiResponse);
   } catch (err) {
     next(err);
   }

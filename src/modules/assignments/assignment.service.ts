@@ -1,8 +1,22 @@
 import { Assignment, IAssignment } from '../../models/Assignment';
 import { Course } from '../../models/Course';
 import { Notification } from '../../models/Notification';
-import { NotFoundError, ForbiddenError } from '../../shared/errors';
+import { PomodoroSession } from '../../models/PomodoroSession';
+import { NotFoundError, ForbiddenError, ValidationError } from '../../shared/errors';
 import { CreateAssignmentDto, UpdateAssignmentDto, AssignmentQuery } from './assignment.types';
+
+async function checkStudyTime(assignmentId: string): Promise<void> {
+  const sessions = await PomodoroSession.find({ assignment_id: assignmentId });
+  const totalStudyHours = sessions.reduce((sum, s) => {
+    if (!s.end_time || !s.start_time) return sum;
+    const duration = s.end_time.getTime() - s.start_time.getTime();
+    return sum + (duration > 0 ? duration : 0);
+  }, 0);
+
+  if (totalStudyHours <= 0) {
+    throw new ValidationError('Bạn chưa học');
+  }
+}
 
 async function verifyOwnership(assignmentId: string, userId: string): Promise<IAssignment> {
   const assignment = await Assignment.findById(assignmentId).populate('course_id');
@@ -60,7 +74,12 @@ export async function updateAssignment(
   userId: string,
   dto: UpdateAssignmentDto,
 ): Promise<IAssignment> {
-  await verifyOwnership(assignmentId, userId);
+  const assignment = await verifyOwnership(assignmentId, userId);
+
+  if (dto.status === 'completed' && assignment.status !== 'completed') {
+    await checkStudyTime(assignmentId);
+  }
+
   const update: Record<string, unknown> = { ...dto };
   if (dto.deadline) update.deadline = new Date(dto.deadline);
 
@@ -70,6 +89,8 @@ export async function updateAssignment(
 
 export async function completeAssignment(assignmentId: string, userId: string): Promise<IAssignment> {
   await verifyOwnership(assignmentId, userId);
+  await checkStudyTime(assignmentId);
+
   const updated = await Assignment.findByIdAndUpdate(
     assignmentId,
     { status: 'completed', completed_at: new Date() },

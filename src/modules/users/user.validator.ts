@@ -2,6 +2,8 @@ import Joi from 'joi';
 
 export const updateProfileSchema = Joi.object({
   full_name: Joi.string().min(2).max(100),
+  student_id: Joi.string().allow('', null).max(50),
+  major: Joi.string().allow('', null).max(100),
   notifications_enabled: Joi.boolean(),
 }).min(1);
 

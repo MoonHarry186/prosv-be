@@ -31,6 +31,8 @@ const options: swaggerJsdoc.Options = {
             _id: { type: 'string' },
             email: { type: 'string' },
             full_name: { type: 'string' },
+            student_id: { type: 'string' },
+            major: { type: 'string' },
             is_verified: { type: 'boolean' },
             created_at: { type: 'string', format: 'date-time' },
           },
@@ -270,6 +272,8 @@ const options: swaggerJsdoc.Options = {
                   type: 'object',
                   properties: {
                     full_name: { type: 'string', minLength: 2, maxLength: 100 },
+                    student_id: { type: 'string', maxLength: 50 },
+                    major: { type: 'string', maxLength: 100 },
                     notifications_enabled: { type: 'boolean' },
                   },
                 },

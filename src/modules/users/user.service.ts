@@ -7,6 +7,8 @@ function toUserProfile(user: InstanceType<typeof User>): UserProfile {
     _id: String(user._id),
     email: user.email,
     full_name: user.full_name,
+    student_id: user.student_id,
+    major: user.major,
     is_verified: user.is_verified,
     notifications_enabled: user.notifications_enabled,
     fcm_token: user.fcm_token,
@@ -26,8 +28,10 @@ export async function getProfile(userId: string): Promise<UserProfile> {
 }
 
 export async function updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfile> {
+  console.log('Updating profile for user:', userId, 'with data:', dto);
   const user = await User.findByIdAndUpdate(userId, dto, { new: true });
   if (!user) throw new NotFoundError('User not found');
+  console.log('Updated user from DB:', user);
   return toUserProfile(user);
 }
 

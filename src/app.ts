@@ -22,6 +22,9 @@ import logger from './shared/logger';
 
 const app = express();
 
+// Bật trust proxy để express-rate-limit hoạt động chính xác trên Render/Heroku
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? '*' }));
 app.use(express.json());
